@@ -1,64 +1,52 @@
-import "./App.css";
-import { useState } from "react";
+import { useState, useEffect} from 'react'
+import './App.css'
+import axios from 'axios'
 
-const api = {
-  key: "b531bc3e61b321c5b26903e7e70f4dab",
-  base: "https://api.openweathermap.org/data/3.0/",
-  lat: 42.886612,
-  lon: -78.878174
-};
+function objOfTime_Temp (list_Time, list_Temp){
+  
+  let d = list_Time.length 
+  let ret_obj = {}
+  for(let i = 0; i < d; i++ ){
 
-function App() {
-  const [search, setSearch] = useState("");
-  const [weather, setWeather] = useState({});
+    let key = list_Time[i]
+    let value = list_Temp[i]
 
-  /*
-    Search button is pressed. Make a fetch call to the Open Weather Map API.
-  */
-  const searchPressed = () => {
-    fetch(`${api.base}weather?q=${search}&units=metric&APPID=${api.key}`)
-      .then((res) => res.json())
-      .then((result) => {
-        setWeather(result);
-      });
-  };
+    ret_obj[key] = value
+  }
 
-  return (
-    <div className="App">
-      <header className="App-header">
-        {/* HEADER  */}
-        <h1>Weather App</h1>
-
-        {/* Search Box - Input + Button  */}
-        <div>
-          <input
-            type="text"
-            placeholder="Enter city/town..."
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <button onClick={searchPressed}>Search</button>
-        </div>
-
-        {/* If weather is not undefined display results from API */}
-        {typeof weather.main !== "undefined" ? (
-          <div>
-            {/* Location  */}
-            <p>{weather.name}</p>
-
-            {/* Temperature Celsius  */}
-            <p>{weather.main.temp}°C</p>
-
-            {/* Condition (Sunny ) */}
-            <p>{weather.weather[0].main}</p>
-            <p>({weather.weather[0].description})</p>
-          </div>
-        ) : (
-          ""
-        )}
-      </header>
-    </div>
-  );
+  return ret_obj;
 }
 
+function App() {
+  const [Data, setData] = useState(null)
 
-export default App;
+  const URL = "https://api.open-meteo.com/v1/forecast?latitude=42.89&longitude=-78.88&hourly=temperature_2m"
+
+  const fetchData = async () => {
+
+    const response = await axios.get(URL)
+    setData(response.data)
+  }
+
+  useEffect(() => {fetchData()}, [])
+
+
+
+  const listOfTemperature = Data&&Data.hourly.temperature_2m
+  // console.log(listOfTemperature)
+  const listOfTime = Data&&Data.hourly.time
+  // console.log(listOfTime)
+
+  const obj_time_temp = objOfTime_Temp(listOfTime,listOfTemperature)
+
+  console.log(obj_time_temp)
+  
+  return (
+    <div className="App">
+      <h1 className="header">Buffalo Weather!</h1>
+      <li>{Data&&listOfTime.map((time) => {time})}</li>
+    </div>
+  )
+}
+
+export default App
