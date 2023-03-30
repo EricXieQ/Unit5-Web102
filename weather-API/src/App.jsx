@@ -52,7 +52,7 @@ function App() {
     <div className="App">
       <h1 className="header">Buffalo Weather!</h1>
       <div className='whole-page'>
-        <SideNav/>
+        <SideNav total = {apiTime.length} sum_temp = {apiTemp.reduce((x,y) => {return (x+y)},0)}/>
         <input
             type="text"
             placeholder="Search..."
