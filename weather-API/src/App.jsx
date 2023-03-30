@@ -1,50 +1,75 @@
 import { useState, useEffect} from 'react'
 import './App.css'
 import axios from 'axios'
-
-function objOfTime_Temp (list_Time, list_Temp){
-  
-  let d = list_Time.length 
-  let ret_obj = {}
-  for(let i = 0; i < d; i++ ){
-
-    let key = list_Time[i]
-    let value = list_Temp[i]
-
-    ret_obj[key] = value
-  }
-
-  return ret_obj;
-}
+import DailyTemperature from '../Components/DailyTemperature'
+import SideNav from '../Components/sideNav'
 
 function App() {
-  const [Data, setData] = useState(null)
+  const [apiData, setData] = useState(null)
+  const [apiTime, setAPITime] = useState([])
+  const [apiTemp, setAPITemp] = useState([])
+
+  const [searchInput, setSearchInput] = useState("")
+  const [filteredResults, setFilteredResults] = useState([]); 
 
   const URL = "https://api.open-meteo.com/v1/forecast?latitude=42.89&longitude=-78.88&hourly=temperature_2m"
 
   const fetchData = async () => {
-
     const response = await axios.get(URL)
     setData(response.data)
   }
+    
+  useEffect( () => {
+      fetchData()
+  }, [])
 
-  useEffect(() => {fetchData()}, [])
+  useEffect( () => {
+    if(apiData != null){
+      setAPITemp(apiData.hourly.temperature_2m)
+      setAPITime(apiData.hourly.time)
+    }
 
+  }, [apiData, searchInput])
 
+  const searchItems = searchValue => {
 
-  const listOfTemperature = Data&&Data.hourly.temperature_2m
-  // console.log(listOfTemperature)
-  const listOfTime = Data&&Data.hourly.time
-  // console.log(listOfTime)
+    setSearchInput(searchValue);
+    if(searchValue !== ""){
 
-  const obj_time_temp = objOfTime_Temp(listOfTime,listOfTemperature)
+      const filteredData = apiTime.filter((time) => {
 
-  console.log(obj_time_temp)
-  
+        return time.includes(searchValue)
+
+      })
+      setFilteredResults(filteredData)
+
+    }else{
+
+      setFilteredResults(apiTime)
+    }
+  }
   return (
     <div className="App">
       <h1 className="header">Buffalo Weather!</h1>
-      <li>{Data&&listOfTime.map((time) => {time})}</li>
+      <div className='whole-page'>
+        <SideNav/>
+        <input
+            type="text"
+            placeholder="Search..."
+            onChange={(inputString) => searchItems(inputString.target.value)}
+        />
+        <div className='main-list'>
+
+          {searchInput.length > 0
+            ? <ul>{filteredResults.map((time, index) => <DailyTemperature key ={index} time = {time} temp = {apiTemp[index]} index = {index} />)}</ul>
+            : <ul>{apiTime.map((time, index) =>
+              <DailyTemperature key ={index} time = {time} temp = {apiTemp[index]} index = {index} />        
+            )}</ul>
+            
+          }
+
+        </div>
+      </div>
     </div>
   )
 }
